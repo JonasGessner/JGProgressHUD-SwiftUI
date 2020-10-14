@@ -8,7 +8,7 @@
 
 import Foundation
 import SwiftUI
-import JGProgressHUD
+@_exported import JGProgressHUD
 
 public struct JGProgressHUDPresenterView<Content: View>: View {
     @StateObject private var coordinator = JGProgressHUDCoordinator()
@@ -23,7 +23,7 @@ public struct JGProgressHUDPresenterView<Content: View>: View {
             content()
             
             if coordinator.wantsPresentation {
-                JGProgressHUDPresenter()
+                JGProgressHUDPresenter().scaledToFill()
             }
         }.environmentObject(coordinator)
     }
