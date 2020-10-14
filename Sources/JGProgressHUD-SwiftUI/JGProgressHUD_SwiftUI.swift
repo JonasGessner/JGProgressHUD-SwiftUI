@@ -9,6 +9,7 @@
 import Foundation
 import SwiftUI
 @_exported import JGProgressHUD
+import JGProgressHUD_Private
 
 public struct JGProgressHUDPresenterView<Content: View>: View {
     @StateObject private var coordinator = JGProgressHUDCoordinator()
@@ -28,7 +29,7 @@ public struct JGProgressHUDPresenterView<Content: View>: View {
 }
 
 public final class JGProgressHUDCoordinator: ObservableObject {
-    @Published public var constructor: ((UIView) -> JGProgressHUD)? {
+    @Published public var constructor: (() -> JGProgressHUD)? {
         willSet {
             if newValue != nil && presentedHUD != nil {
                 print("WARNING: Trying to show JGProgressHUD while another HUD is still being presented by the same presenter. This is not supported. This HUD will not be shown.")
@@ -47,18 +48,20 @@ fileprivate struct JGProgressHUDPresenter: UIViewRepresentable {
     @EnvironmentObject var constructionCoordinator: JGProgressHUDCoordinator
     
     func makeUIView(context: Context) -> UIView {
-        let v = UIView()
-        return v
-    }
-    
-    func updateUIView(_ uiView: UIView, context: Context) {
-        guard let constructor = constructionCoordinator.constructor else { return }
-        guard constructionCoordinator.presentedHUD == nil else { return }
+        let hud = constructionCoordinator.constructor!()
         
-        constructionCoordinator.presentedHUD = constructor(uiView)
+        constructionCoordinator.presentedHUD = hud
+        
+        hud.show(animated: true)
+        
         constructionCoordinator.presentedHUD?.perform(afterDismiss: {
             self.constructionCoordinator.constructor = nil
             constructionCoordinator.presentedHUD = nil
         })
+        
+        return hud
+    }
+    
+    func updateUIView(_ uiView: UIView, context: Context) {
     }
 }

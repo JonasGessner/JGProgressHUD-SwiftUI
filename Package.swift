@@ -14,16 +14,18 @@ let package = Package(
     ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
-        .package(url: "https://github.com/JonasGessner/JGProgressHUD.git", .branch("master")),
+        //        .package(url: "https://github.com/JonasGessner/JGProgressHUD.git", .branch("master")),
+        .package(path: "../../GitHub/JGProgressHUD")
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
         // Targets can depend on other targets in this package, and on products in packages this package depends on.
         .target(
             name: "JGProgressHUD-SwiftUI",
-            dependencies: ["JGProgressHUD"]),
+            dependencies: [.product(name: "JGProgressHUD", package: "JGProgressHUD"), .product(name: "JGProgressHUD.Private", package: "JGProgressHUD")]),
         .testTarget(
             name: "JGProgressHUD-SwiftUITests",
             dependencies: ["JGProgressHUD-SwiftUI"]),
     ]
 )
+
