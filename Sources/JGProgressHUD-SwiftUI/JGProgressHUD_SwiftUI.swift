@@ -11,16 +11,16 @@ import SwiftUI
 @_exported import JGProgressHUD
 
 /**
- A SwiftUI View used to present JGProgressHUD. Use this view to define the area in which a HUD can be presented. A HUD will be shown over the content of this view. Generally you want this view to be the root view of your app, in order to present a fullscreen HUD.
- To show a HUD, use the environment object of type `JGProgressHUDCoordinator` and set its `constructor` property to a builder that creates the HUD to show. This closure should only create and return the HUD, and it will be shown automatically with an animation. You can already schedule the HUD to be dismissed within this closure.
+ A SwiftUI View used to present instance of JGProgressHUD. Use this view to define the area in which a HUD can be presented. HUDs will be shown over the content of this view. Generally you want this view to be the root view of your app, such that you can present a fullscreen HUDs.
+ To show a HUD, use the environment object of type `JGProgressHUDCoordinator` and set its `constructor` property to a builder that creates the HUD to show. This closure should only create and return the HUD, after which the returned HUD is shown automatically with an animation. You can already schedule the HUD to be dismissed after a delay within this closure.
  
  To update a HUD that is already shown, access the `presentedHUD` property of the `JGProgressHUDCoordinator` environment object.
  
- You may only show one HUD at a time. To check whether a HUD is already visible check the `presentedHUD` property.
+ You may only show one HUD at a time. To check whether a HUD is already visible check the `presentedHUD` property of `JGProgressHUDCoordinator`.
  
  You may set whether the HUD captures all user interaction or none at all. The `interactionType` property of `JGProgressHUD` has no effect when using this presenter.
  
- Example:
+ # Example
  ```
  struct NavigationBody: View {
      // This environment object is automatically set by JGProgressHUDPresenter.
@@ -72,6 +72,7 @@ public struct JGProgressHUDPresenter<Content: View>: View {
     }
 }
 
+/// An instance of this class will be in the environment inside the content of a `JGProgressHUDPresenter`. Acces this instance via the environment and set the `constructor` property to show a HUD. To modify a presented HUD, access the `presentedHUD` property. Both properties of this class automatically set to `nil` when a presented HUD disappears. Another HUD can be shown subsequently. See `JGProgressHUDPresenter` for more info.
 public final class JGProgressHUDCoordinator: ObservableObject {
     @Published public var constructor: (() -> JGProgressHUD)? {
         willSet {
