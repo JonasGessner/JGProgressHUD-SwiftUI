@@ -22,9 +22,7 @@ public struct JGProgressHUDPresenterView<Content: View>: View {
         ZStack {
             content()
             
-            if coordinator.wantsPresentation {
-                JGProgressHUDPresenter().scaledToFit()
-            }
+            JGProgressHUDPresenter().scaledToFit().allowsHitTesting(coordinator.wantsPresentation)
         }.environmentObject(coordinator)
     }
 }
