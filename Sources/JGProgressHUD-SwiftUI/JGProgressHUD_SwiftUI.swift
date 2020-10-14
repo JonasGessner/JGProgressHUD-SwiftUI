@@ -23,7 +23,7 @@ import SwiftUI
  Example:
  ```
  struct NavigationBody: View {
-     // This environment object is automatically set by JGProgressHUDPresenterView.
+     // This environment object is automatically set by JGProgressHUDPresenter.
      @EnvironmentObject var hudCoordinator: JGProgressHUDCoordinator
  
      var body: some View {
@@ -43,7 +43,7 @@ import SwiftUI
  struct ContentView: View {
      var body: some View {
          // This presenter can present a fullscreen HUD.
-         JGProgressHUDPresenterView {
+         JGProgressHUDPresenter {
              NavigationView {
                  NavigationBody()
              }
@@ -52,7 +52,7 @@ import SwiftUI
  }
 ```
 */
-public struct JGProgressHUDPresenterView<Content: View>: View {
+public struct JGProgressHUDPresenter<Content: View>: View {
     @StateObject private var coordinator = JGProgressHUDCoordinator()
     
     let userInteractionOnHUD: Bool
@@ -67,9 +67,7 @@ public struct JGProgressHUDPresenterView<Content: View>: View {
         ZStack {
             content()
             
-            if coordinator.wantsPresentation {
-                JGProgressHUDPresenter().allowsHitTesting(userInteractionOnHUD)
-            }
+            JGProgressHUDHost().allowsHitTesting(coordinator.wantsPresentation && userInteractionOnHUD)
         }.environmentObject(coordinator)
     }
 }
@@ -90,48 +88,28 @@ public final class JGProgressHUDCoordinator: ObservableObject {
     public fileprivate(set) var presentedHUD: JGProgressHUD?
 }
 
-fileprivate struct JGProgressHUDPresenter: UIViewRepresentable {
+// MARK: - Private
+
+fileprivate struct JGProgressHUDHost: UIViewRepresentable {
     @EnvironmentObject var constructionCoordinator: JGProgressHUDCoordinator
     
-    private final class View: UIView {
-        var action: ((UIView) -> Void)?
-        
-        init(action: @escaping (UIView) -> Void) {
-            self.action = action
-            super.init(frame: .zero)
-        }
-        
-        @available(*, unavailable)
-        required init?(coder: NSCoder) {
-            fatalError("init(coder:) has not been implemented")
-        }
-        
-        override func layoutSubviews() {
-            super.layoutSubviews()
-            
-            if !frame.isEmpty, let action = action {
-                self.action = nil
-                action(self)
-            }
-        }
-    }
-    
     func makeUIView(context: Context) -> UIView {
-        let hud = constructionCoordinator.constructor!()
-        
-        constructionCoordinator.presentedHUD = hud
-        
-        // Wait until the presented view has a nonzero frame
-        return View { view in
-            hud.show(in: view)
-            
-            hud.perform(afterDismiss: {
-                self.constructionCoordinator.constructor = nil
-                constructionCoordinator.presentedHUD = nil
-            })
-        }
+        return UIView()
     }
     
     func updateUIView(_ uiView: UIView, context: Context) {
+        guard let constructor = constructionCoordinator.constructor else { return }
+        guard constructionCoordinator.presentedHUD == nil else { return }
+        
+        let hud = constructor()
+        
+        constructionCoordinator.presentedHUD = hud
+        
+        hud.show(in: uiView)
+        
+        hud.perform(afterDismiss: {
+            constructionCoordinator.constructor = nil
+            constructionCoordinator.presentedHUD = nil
+        })
     }
 }
