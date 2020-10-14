@@ -23,7 +23,7 @@ public struct JGProgressHUDPresenterView<Content: View>: View {
             content()
             
             if coordinator.wantsPresentation {
-                JGProgressHUDPresenter().scaledToFill()
+                JGProgressHUDPresenter().scaledToFit()
             }
         }.environmentObject(coordinator)
     }
