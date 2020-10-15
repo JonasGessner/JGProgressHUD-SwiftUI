@@ -12,11 +12,11 @@ import SwiftUI
 
 /**
  A SwiftUI View used to present instance of JGProgressHUD. Use this view to define the area in which a HUD can be presented. HUDs will be shown over the content of this view. Generally you want this view to be the root view of your app, such that you can present a fullscreen HUDs.
- To show a HUD, use the environment object of type `JGProgressHUDCoordinator` and set its `constructor` property to a builder that creates the HUD to show. This closure should only create and return the HUD, after which the returned HUD is shown automatically with an animation. You can already schedule the HUD to be dismissed after a delay within this closure.
+ To show a HUD, use the environment object of type `JGProgressHUDCoordinator` and call its `showHUD(constructor:handleExistingHUD:)` method, supplying a constructor closure that creates the HUD to show. This closure should only create and return the HUD, which will automatically be shown subsequently. You can already schedule the HUD to be dismissed after a delay within the constructor closure.
  
  To update a HUD that is already shown, access the `presentedHUD` property of the `JGProgressHUDCoordinator` environment object.
  
- You may only show one HUD at a time. To check whether a HUD is already visible check the `presentedHUD` property of `JGProgressHUDCoordinator`.
+ You may only show one HUD at a time. To check whether a HUD is already visible check the `presentedHUD` property of `JGProgressHUDCoordinator`. If you call `showHUD()` while a HUD is already presented, you may handle this case in the `handleExistingHUD` closure.
  
  You may set whether the HUD captures all user interaction or none at all. The `interactionType` property of `JGProgressHUD` has no effect when using this presenter.
  
@@ -28,8 +28,8 @@ import SwiftUI
  
      var body: some View {
          Button("Press Me") {
-             // Simply set the constructor, and return your HUD!
-             hudCoordinator.constructor = {
+             // Simply call showHUD and return your HUD!
+             hudCoordinator.showHUD {
                  let hud = JGProgressHUD()
                  hud.textLabel.text = "Hello!"
                  hud.dismiss(afterDelay: 3)
@@ -53,7 +53,7 @@ import SwiftUI
 ```
 */
 public struct JGProgressHUDPresenter<Content: View>: View {
-    @StateObject private var coordinator = JGProgressHUDCoordinator()
+    private let coordinator = JGProgressHUDCoordinator()
     
     let userInteractionOnHUD: Bool
     
@@ -67,32 +67,63 @@ public struct JGProgressHUDPresenter<Content: View>: View {
         ZStack {
             content()
             
-            JGProgressHUDHost().allowsHitTesting(coordinator.wantsPresentation && userInteractionOnHUD)
+            JGProgressHUDHost(constructionCoordinator: coordinator, trigger: coordinator.trigger) .allowsHitTesting(coordinator.wantsPresentation && userInteractionOnHUD)
         }.environmentObject(coordinator)
     }
 }
 
-/// An instance of this class will be in the environment inside the content of a `JGProgressHUDPresenter`. Acces this instance via the environment and set the `constructor` property to show a HUD. To modify a presented HUD, access the `presentedHUD` property. Both properties of this class automatically set to `nil` when a presented HUD disappears. Another HUD can be shown subsequently. See `JGProgressHUDPresenter` for more info.
+/// An instance of this class will be in the environment inside the content of a `JGProgressHUDPresenter`. Acces this instance via the environment and call the `showHUD()` method to show a HUD. To modify a presented HUD, access the `presentedHUD` property. This property is automatically set to `nil` when a presented HUD disappears. Another HUD can be shown subsequently. See `JGProgressHUDPresenter` for more info.
+// Implementation note. This class is an ObservableObject so that it can become an environment object. It never actually sends any change events, because no view except JGProgressHUDHost are interested in changes on this object. By not sending change events on this object, the number of re-evaluated views may drastically shrink. JGProgressHUDHost gets notified of changes via the private trigger object.
 public final class JGProgressHUDCoordinator: ObservableObject {
-    @Published public var constructor: (() -> JGProgressHUD)? {
+    fileprivate var constructor: (() -> JGProgressHUD)? {
         willSet {
-            if newValue != nil && presentedHUD != nil {
-                print("WARNING: Trying to show JGProgressHUD while another HUD is still being presented by the same presenter. This is not supported. This HUD will not be shown.")
+            trigger.triggerChange()
+        }
+    }
+    
+    /**
+     Shows a HUD created by the closure `constructor`. Return an initialized and ready to be displayed HUD from this closure. You do not need to manually show the HUD, it will be shown automatically.
+     
+     A HUD may already be presented. If this is the case, you are given a chance to handle this scenario using the `handleExistingHUD` closure. Return `true` from this closure to proceed with presenting the new HUD. For example, you may hide the existing HUD within `handleExistingHUD`. Return `false` (default) to not present the new HUD.
+     */
+    public func showHUD(constructor: @escaping () -> JGProgressHUD, handleExistingHUD: (JGProgressHUD) -> Bool = { _ in return false }) {
+        if let existing = presentedHUD {
+            guard handleExistingHUD(existing) else {
+#if DEBUG
+                print("[DEBUG] A HUD is already presented, not showing the new HUD.")
+#endif
+                return
             }
+            
+            presentedHUD = nil
+        }
+        
+        self.constructor = constructor
+    }
+    
+    /// The HUD that is currently displayed, if any.
+    public fileprivate(set) var presentedHUD: JGProgressHUD?
+    
+    // MARK: Private
+    
+    fileprivate let trigger = PrivateObservable()
+    
+    fileprivate final class PrivateObservable: ObservableObject {
+        func triggerChange() {
+            objectWillChange.send()
         }
     }
     
     fileprivate var wantsPresentation: Bool {
         return constructor != nil
     }
-    
-    public fileprivate(set) var presentedHUD: JGProgressHUD?
 }
 
 // MARK: - Private
 
 fileprivate struct JGProgressHUDHost: UIViewRepresentable {
-    @EnvironmentObject var constructionCoordinator: JGProgressHUDCoordinator
+    let constructionCoordinator: JGProgressHUDCoordinator
+    @ObservedObject fileprivate var trigger: JGProgressHUDCoordinator.PrivateObservable
     
     func makeUIView(context: Context) -> UIView {
         return UIView()
