@@ -1,7 +1,7 @@
 JGProgressHUD-SwiftUI
 ---------------
 
-This is a lightweight and easy-to-use SwiftUI wrapper for [JGProgressHUD](https://github.com/JonasGessner/JGProgressHUD), giving you access to the large and proven feature-set of JGProgressHUD. Supports iOS, macCatalyst and tvOS.
+This is a lightweight and easy-to-use SwiftUI wrapper for [JGProgressHUD](https://github.com/JonasGessner/JGProgressHUD), giving you access to the large and proven feature set of JGProgressHUD. Supports iOS, macCatalyst and tvOS 14.0+.
 <p align="center">
 <img src="https://github.com/JonasGessner/JGProgressHUD/raw/master/Examples/Screenshots/Presentation.png" style='height: 100%; width: 100%; object-fit: contain'/>
 </p>
@@ -22,9 +22,9 @@ Usage
 
 This package builds on top of the UIKit-based [JGProgressHUD](https://github.com/JonasGessner/JGProgressHUD) and provides a trivial way of showing HUDs in SwiftUI code.
 
-You use the view `JGProgressHUDPresenter` as a canvas which can display HUDs over the content of this view. Generally you want a single `JGProgressHUDPresenter` view as the root view of your application, such that full screen HUDs can be displayed.
+You use the view `JGProgressHUDPresenter` as a canvas, which can display HUDs over its contents. Generally you want to use a single `JGProgressHUDPresenter` view as the root view of your application, such that full screen HUDs can be displayed.
 
-To show a HUD from any contained view, define the environment object of type `JGProgressHUDCoordinator` in your view struct. This object is automatically available in the environment via `JGProgressHUDPresenter`. Call its `showHUD(constructor:handleExistingHUD:)` method, providing a `constructor` closure that returns the HUD to show. The returned HUD will be shown automatically, hence you do not need to call the `show()` method on the HUD. You may already schedule the HUD to disappear using the `dismiss(afterDelay:)` method of `JGProgressHUD`.
+To show a HUD from any contained view, define the environment object of type `JGProgressHUDCoordinator` in your view struct. This object is automatically available in the environment via `JGProgressHUDPresenter`. Call its `showHUD(constructor:handleExistingHUD:)` method, providing a `constructor` closure that returns the HUD to show. The returned HUD will be shown automatically, hence you do not need to call the `show()` method on the HUD. You may already schedule the HUD to disappear using the `dismiss(afterDelay:)` method.
 
 The `handleExistingHUD` closure is only called in case a HUD is already presented. You can, for example, dismiss the current HUD and return `true` to continue showing the new HUD. By returning `false` (default), you prevent the new HUD from being shown.
 
@@ -78,7 +78,7 @@ Detailed Documentation
 ----------------
 Please see the [JGProgressHUD project](https://github.com/JonasGessner/JGProgressHUD) for documentation on JGProgressHUD itself. 
 
-See the doc strings in <a href="Sources/JGProgressHUD-SwiftUI/JGProgressHUD-SwiftUI.swift">JGProgressHUD-SwiftUI.swift</a> for more info on JGProgressHUD-SwiftUI.
+See the doc strings in <a href="Sources/JGProgressHUD-SwiftUI/JGProgressHUD_SwiftUI.swift">JGProgressHUD_SwiftUI.swift</a> for more info.
 
 License
 ---------

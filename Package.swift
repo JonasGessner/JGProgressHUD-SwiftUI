@@ -22,9 +22,6 @@ let package = Package(
         .target(
             name: "JGProgressHUD-SwiftUI",
             dependencies: [.product(name: "JGProgressHUD", package: "JGProgressHUD")]),
-        .testTarget(
-            name: "JGProgressHUD-SwiftUITests",
-            dependencies: ["JGProgressHUD-SwiftUI"]),
     ]
 )
 
