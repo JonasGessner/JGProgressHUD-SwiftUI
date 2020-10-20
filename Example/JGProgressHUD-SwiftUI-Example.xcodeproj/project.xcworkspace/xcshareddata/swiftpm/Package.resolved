@@ -1,0 +1,25 @@
+{
+  "object": {
+    "pins": [
+      {
+        "package": "JGProgressHUD",
+        "repositoryURL": "https://github.com/JonasGessner/JGProgressHUD.git",
+        "state": {
+          "branch": null,
+          "revision": "78d7cd35f1d90ff74fd82e486f2cbe4b24be8cf9",
+          "version": "2.2.0"
+        }
+      },
+      {
+        "package": "JGProgressHUD-SwiftUI",
+        "repositoryURL": "https://github.com/JonasGessner/JGProgressHUD-SwiftUI.git",
+        "state": {
+          "branch": null,
+          "revision": "69898e42da98bc08076bbf158e14d2aeec4db78e",
+          "version": "0.1.0"
+        }
+      }
+    ]
+  },
+  "version": 1
+}

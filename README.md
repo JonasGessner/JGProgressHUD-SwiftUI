@@ -33,6 +33,8 @@ You may furthermore access, modify or dismiss a HUD that is already presented by
 Example
 ---------------
 
+Also see the [Example Project](https://github.com/JonasGessner/JGProgressHUD-SwiftUI/tree/main/Example).
+
  ```swift
  import SwiftUI
  import JGProgressHUD_SwiftUI
@@ -78,7 +80,7 @@ Detailed Documentation
 ----------------
 Please see the [JGProgressHUD project](https://github.com/JonasGessner/JGProgressHUD) for documentation on JGProgressHUD itself. 
 
-See the doc strings in <a href="Sources/JGProgressHUD-SwiftUI/JGProgressHUD_SwiftUI.swift">JGProgressHUD_SwiftUI.swift</a> for more info.
+See the doc strings in [JGProgressHUD_SwiftUI.swift](https://github.com/JonasGessner/JGProgressHUD-SwiftUI/blob/main/Sources/JGProgressHUD-SwiftUI/JGProgressHUD_SwiftUI.swift) for more info.
 
 License
 ---------

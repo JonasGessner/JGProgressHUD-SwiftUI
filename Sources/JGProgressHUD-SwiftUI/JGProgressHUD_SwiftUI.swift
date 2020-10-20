@@ -8,6 +8,7 @@
 
 import Foundation
 import SwiftUI
+import Combine
 @_exported import JGProgressHUD
 
 /**
@@ -53,11 +54,14 @@ import SwiftUI
 ```
 */
 public struct JGProgressHUDPresenter<Content: View>: View {
-    private let coordinator = JGProgressHUDCoordinator()
+    @State private var coordinator = JGProgressHUDCoordinator()
     
     let userInteractionOnHUD: Bool
     
+    @State private var presenting = false
+    
     private var content: () -> Content
+    
     public init(userInteractionOnHUD: Bool = false, @ViewBuilder content: @escaping () -> Content) {
         self.userInteractionOnHUD = userInteractionOnHUD
         self.content = content
@@ -67,17 +71,29 @@ public struct JGProgressHUDPresenter<Content: View>: View {
         ZStack {
             content()
             
-            JGProgressHUDHost(constructionCoordinator: coordinator, trigger: coordinator.trigger) .allowsHitTesting(coordinator.wantsPresentation && userInteractionOnHUD)
-        }.environmentObject(coordinator)
+            JGProgressHUDHost(constructionCoordinator: coordinator, trigger: coordinator.trigger)
+                .edgesIgnoringSafeArea(.all)
+                .allowsHitTesting(presenting && userInteractionOnHUD)
+        }
+        // Optimization: Only update the presenting variable when requesting userInteractionOnHUD. This reduces the body evaluations when userInteractionOnHUD is off.
+        .onReceive(coordinator.wantsPresentationPublisher.filter({ _ in userInteractionOnHUD }), perform: { wantsPresentation in
+            presenting = wantsPresentation
+        })
+        .environmentObject(coordinator)
     }
 }
 
 /// An instance of this class will be in the environment inside the content of a `JGProgressHUDPresenter`. Acces this instance via the environment and call the `showHUD()` method to show a HUD. To modify a presented HUD, access the `presentedHUD` property. This property is automatically set to `nil` when a presented HUD disappears. Another HUD can be shown subsequently. See `JGProgressHUDPresenter` for more info.
-// Implementation note. This class is an ObservableObject so that it can become an environment object. It never actually sends any change events, because no view except JGProgressHUDHost are interested in changes on this object. By not sending change events on this object, the number of re-evaluated views may drastically shrink. JGProgressHUDHost gets notified of changes via the private trigger object.
+// Implementation note: This class is an ObservableObject so that it can become an environment object. It never actually sends any change events, because no views except JGProgressHUDHost and JGProgressHUDPresenter are interested in changes on this object. By not sending change events on this object, the number of re-evaluated views may drastically shrink. It is an optimization. JGProgressHUDHost gets notified of changes via the private trigger object, while JGProgressHUDPresenter listens for changes via wantsPresentationPublisher.
 public final class JGProgressHUDCoordinator: ObservableObject {
+    fileprivate let wantsPresentationPublisher = PassthroughSubject<Bool, Never>()
+    
     fileprivate var constructor: (() -> JGProgressHUD)? {
         willSet {
             trigger.triggerChange()
+        }
+        didSet {
+            wantsPresentationPublisher.send(wantsPresentation)
         }
     }
     
@@ -122,8 +138,8 @@ public final class JGProgressHUDCoordinator: ObservableObject {
 // MARK: - Private
 
 fileprivate struct JGProgressHUDHost: UIViewRepresentable {
-    let constructionCoordinator: JGProgressHUDCoordinator
-    @ObservedObject fileprivate var trigger: JGProgressHUDCoordinator.PrivateObservable
+    @ObservedObject var constructionCoordinator: JGProgressHUDCoordinator
+    @ObservedObject var trigger: JGProgressHUDCoordinator.PrivateObservable
     
     func makeUIView(context: Context) -> UIView {
         return UIView()
